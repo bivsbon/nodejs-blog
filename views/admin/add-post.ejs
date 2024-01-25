@@ -3,10 +3,18 @@
   <h2>Add New Post</h2>
 </div>
 
-<form action="/add-post" method="POST">
+<form action="/add-post" method="POST" id="add_post_form">
 
   <label for="title"><b>Title</b></label>
   <input type="text" placeholder="Post Title" name="title">
+
+  <label for="category"><b>Category</b></label>
+  <select name="category" form="add_post_form">
+    <option value="technology">Technology</option>
+    <option value="lifestyle">Lifestyle</option>
+    <option value="business">Business</option>
+    <option value="art">Art</option>
+  </select>
 
   <label for="body"><b>Content</b></label>
   <textarea name="body" cols="50" rows="10"></textarea>

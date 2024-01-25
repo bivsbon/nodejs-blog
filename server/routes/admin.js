@@ -64,7 +64,7 @@ router.post('/admin', async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if(!isPasswordValid) {
+    if(!isPasswordValid || user.role !== 'admin') {
       return res.status(401).json( { message: 'Invalid credentials' } );
     }
 
@@ -136,6 +136,7 @@ router.post('/add-post', authMiddleware, async (req, res) => {
     try {
       const newPost = new Post({
         title: req.body.title,
+        category: req.body.category,
         body: req.body.body
       });
 
@@ -187,6 +188,7 @@ router.put('/edit-post/:id', authMiddleware, async (req, res) => {
 
     await Post.findByIdAndUpdate(req.params.id, {
       title: req.body.title,
+      category: req.body.category,
       body: req.body.body,
       updatedAt: Date.now()
     });
@@ -226,7 +228,7 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-      const user = await User.create({ username, password:hashedPassword });
+      const user = await User.create({ username, password:hashedPassword, role:'admin' });
       res.status(201).json({ message: 'User Created', user });
     } catch (error) {
       if(error.code === 11000) {
