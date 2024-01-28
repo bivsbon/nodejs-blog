@@ -14,13 +14,11 @@ const PostSchema = new Schema({
     type: String,
     required: true
   },
-  createdAt: {
-    type: Date,
-    default: Date.now() - Math.floor(Math.random() * 60)
+  created_at: {
+    type: Date
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now() - Math.floor(Math.random() * 60)
+  updated_at: {
+    type: Date
   }
 });
 

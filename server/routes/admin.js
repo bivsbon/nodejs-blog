@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
-const User = require('../models/User');
+const Admin = require('../models/Admin');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -14,7 +14,7 @@ const jwtSecret = process.env.JWT_SECRET;
  * Check Login
 */
 const authMiddleware = (req, res, next ) => {
-  const token = req.cookies.token;
+  const token = req.cookies.adminToken;
 
   if(!token) {
     return res.status(401).json( { message: 'Unauthorized'} );
@@ -22,7 +22,7 @@ const authMiddleware = (req, res, next ) => {
 
   try {
     const decoded = jwt.verify(token, jwtSecret);
-    req.userId = decoded.userId;
+    req.adminId = decoded.adminId;
     next();
   } catch(error) {
     res.status(401).json( { message: 'Unauthorized'} );
@@ -56,20 +56,20 @@ router.post('/admin', async (req, res) => {
   try {
     const { username, password } = req.body;
     
-    const user = await User.findOne( { username } );
+    const admin = await Admin.findOne( { username } );
 
-    if(!user) {
+    if(!admin) {
       return res.status(401).json( { message: 'Invalid credentials' } );
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
 
-    if(!isPasswordValid || user.role !== 'admin') {
+    if(!isPasswordValid) {
       return res.status(401).json( { message: 'Invalid credentials' } );
     }
 
-    const token = jwt.sign({ userId: user._id}, jwtSecret );
-    res.cookie('token', token, { httpOnly: true });
+    const token = jwt.sign({ adminId: admin._id}, jwtSecret );
+    res.cookie('adminToken', token, { httpOnly: true });
     res.redirect('/dashboard');
 
   } catch (error) {
@@ -131,13 +131,16 @@ router.get('/add-post', authMiddleware, async (req, res) => {
  * POST /
  * Admin - Create New Post
 */
-router.post('/add-post', authMiddleware, async (req, res) => {
+router.post('/add-post', async (req, res) => {
   try {
     try {
+      date = Date.now() - Math.floor(Math.random() * 60*24*60*60*1000)
       const newPost = new Post({
         title: req.body.title,
         category: req.body.category,
-        body: req.body.body
+        body: req.body.body,
+        createAt: date,
+        updatedAt: date
       });
 
       await Post.create(newPost);
@@ -161,7 +164,7 @@ router.get('/edit-post/:id', authMiddleware, async (req, res) => {
 
     const locals = {
       title: "Edit Post",
-      description: "Free NodeJs User Management System",
+      description: "Free NodeJs Admin Management System",
     };
 
     const data = await Post.findOne({ _id: req.params.id });
@@ -228,11 +231,11 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     try {
-      const user = await User.create({ username, password:hashedPassword, role:'admin' });
-      res.status(201).json({ message: 'User Created', user });
+      const admin = await Admin.create({ username, password:hashedPassword });
+      res.status(201).json({ message: 'Admin Created', admin });
     } catch (error) {
       if(error.code === 11000) {
-        res.status(409).json({ message: 'User already in use'});
+        res.status(409).json({ message: 'Admin already in use'});
       }
       res.status(500).json({ message: 'Internal server error'})
     }
@@ -264,7 +267,7 @@ router.delete('/delete-post/:id', authMiddleware, async (req, res) => {
  * Admin Logout
 */
 router.get('/logout', (req, res) => {
-  res.clearCookie('token');
+  res.clearCookie('adminToken');
   //res.json({ message: 'Logout successful.'});
   res.redirect('/');
 });
