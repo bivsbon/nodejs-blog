@@ -9,15 +9,20 @@
   
   <% if (typeof readerName !== 'undefined') { %>
     <section class="articles">
-      <ul class="article-ul">
-        <% data.forEach(post => { %>
-          <li>
-            <a href="/post/<%= post._id %>">
-              <span><%= post.title %></span>
-              <span class="article-list__date"><%= post.created_at.toDateString() %></span>
-            </a>
-          </li>
-        <% }) %>
-      </ul>
+      <% categories.forEach(category => { %>
+        <h2><%= category.charAt(0).toUpperCase() + category.slice(1) %></h2>
+        <ul class="article-ul">
+          <% data.forEach(post => { %>
+            <% if (post.category === category) { %>
+              <li>
+                <a href="/post/<%= post._id %>">
+                  <span><%= post.title %></span>
+                  <span class="article-list__date"><%= post.created_at.toDateString() %></span>
+                </a>
+              </li>
+            <% } %>
+          <% }) %>
+        </ul>
+      <% }) %>
     </section>
   <% } %>

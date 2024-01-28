@@ -139,8 +139,8 @@ router.post('/add-post', async (req, res) => {
         title: req.body.title,
         category: req.body.category,
         body: req.body.body,
-        createAt: date,
-        updatedAt: date
+        created_at: date,
+        updated_at: date
       });
 
       await Post.create(newPost);

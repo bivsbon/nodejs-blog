@@ -280,6 +280,14 @@ router.get('/history', authMiddleware, async (req, res) => {
       currentRoute: '/',
       readerName: req.readerName,
       readerId: req.readerId,
+      categories: [
+        "business",
+        "technology",
+        "art",
+        "general",
+        "health",
+        "lifestyle"
+      ]
     });
 
   } catch (error) {
