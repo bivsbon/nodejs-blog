@@ -14,14 +14,13 @@
     <ul class="article-ul">
       <% data.forEach(post => { %>
         <li>
-          <a href="/post/<%= post._id %>" onclick="sendEvent('<%= readerId %>', '<%= post._id %>', 1)">
+          <a href="/post/<%= post._id %>">
             <span><%= post.title %></span>
-            <span class="article-list__date"><%= post.created_at.toDateString() %></span>
+            <span class="article-list__date"><%= new Date(post.created_at*1000).toDateString() %></span>
           </a>
         </li>
       <% }) %>
     </ul>
-  
   
     <% if (nextPage !== null) { %>
       <a href="/?page=<%= nextPage %>" class="pagination">&lt; View Older Posts</a>
@@ -29,29 +28,3 @@
   </section>
 <% } %>
 
-<script>
-  async function sendEvent(readerId, postId, event_code) {
-    var myHeaders = new Headers();
-    myHeaders.append("accept", "application/json");
-    myHeaders.append("Content-Type", "application/json");
-
-    var raw = JSON.stringify({
-      "event_type": event_code,
-      "post_id": postId,
-      "timestamp": Math.round(Date.now()/1000),
-      "user_id": readerId
-    });
-
-    var requestOptions = {
-      method: 'POST',
-      headers: myHeaders,
-      body: raw,
-      redirect: 'follow'
-    };
-
-    fetch("http://localhost:8000/user-event", requestOptions)
-      .then(response => response.text())
-      .then(result => console.log(result))
-      .catch(error => console.log('error', error));
-  }
-</script>

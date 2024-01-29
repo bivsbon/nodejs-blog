@@ -15,10 +15,10 @@ const PostSchema = new Schema({
     required: true
   },
   created_at: {
-    type: Date
+    type: Number
   },
   updated_at: {
-    type: Date
+    type: Number
   }
 });
 

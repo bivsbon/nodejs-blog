@@ -45,7 +45,8 @@ router.get('', authMiddleware, async (req, res) => {
     let perPage = 10;
     let page = req.query.page || 1;
 
-    const data = await Post.aggregate([ { $sort: { created_at: -1 } } ])
+    const data = await Post.find({})
+    .sort("-created_at")
     .skip(perPage * page - perPage)
     .limit(perPage)
     .exec();
@@ -92,7 +93,7 @@ router.get('', authMiddleware, async (req, res) => {
  * GET /
  * Post :id
 */
-router.get('/post/:id', async (req, res) => {
+router.get('/post/:id', authMiddleware, async (req, res) => {
   try {
     let slug = req.params.id;
 
@@ -102,6 +103,8 @@ router.get('/post/:id', async (req, res) => {
       title: data.title,
       description: "Simple Blog created with NodeJs, Express & MongoDb.",
     }
+
+    await sendEvent(req.readerId, req.params.id, 1)
 
     res.render('post', { 
       locals,
@@ -114,39 +117,30 @@ router.get('/post/:id', async (req, res) => {
 
 });
 
+async function sendEvent(readerId, postId, event_code) {
+  var myHeaders = new Headers();
+  myHeaders.append("accept", "application/json");
+  myHeaders.append("Content-Type", "application/json");
 
-/**
- * POST /
- * Post - searchTerm
-*/
-router.post('/search', async (req, res) => {
-  try {
-    const locals = {
-      title: "Seach",
-      description: "Simple Blog created with NodeJs, Express & MongoDb."
-    }
+  var raw = JSON.stringify({
+    "event_type": event_code,
+    "post_id": postId,
+    "timestamp": Math.round(Date.now()/1000),
+    "user_id": readerId
+  });
 
-    let searchTerm = req.body.searchTerm;
-    const searchNoSpecialChar = searchTerm.replace(/[^a-zA-Z0-9 ]/g, "")
+  var requestOptions = {
+    method: 'POST',
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow'
+  };
 
-    const data = await Post.find({
-      $or: [
-        { title: { $regex: new RegExp(searchNoSpecialChar, 'i') }},
-        { body: { $regex: new RegExp(searchNoSpecialChar, 'i') }}
-      ]
-    });
-
-    res.render("search", {
-      data,
-      locals,
-      currentRoute: '/'
-    });
-
-  } catch (error) {
-    console.log(error);
-  }
-
-});
+  fetch("http://localhost:8000/create-event", requestOptions)
+    .then(response => response.text())
+    .then(result => console.log(result))
+    .catch(error => console.log('error', error));
+}
 
 
 /**
@@ -206,12 +200,57 @@ router.post('/register-reader', async (req, res) => {
 
 /**
  * GET /
- * About
+ * Categories
 */
-router.get('/about', (req, res) => {
-  res.render('about', {
-    currentRoute: '/about'
+router.get('/categories', authMiddleware, (req, res) => {
+  res.render('categories', {
+    currentRoute: '/categories',
+    readerName: req.readerName,
+    readerId: req.readerId,
   });
+});
+
+
+/**
+ * GET /
+ * Category
+*/
+router.get('/category/:category', authMiddleware, async (req, res) => {
+  try {
+    const locals = {
+      title: "NodeJs Blog",
+      description: "Simple Blog created with NodeJs, Express & MongoDb."
+    }
+
+    let perPage = 10;
+    let page = req.query.page || 1;
+
+    const data = await Post.find({category: req.params.category})
+    .sort("-created_at")
+    .skip(perPage * page - perPage)
+    .limit(perPage)
+    .exec();
+
+    // Count is deprecated - please use countDocuments
+    // const count = await Post.count();
+    const count = await Post.countDocuments({});
+    const nextPage = parseInt(page) + 1;
+    const hasNextPage = nextPage <= Math.ceil(count / perPage);
+
+    res.render('category', { 
+      locals,
+      data,
+      current: page,
+      nextPage: hasNextPage ? nextPage : null,
+      currentRoute: '/category',
+      readerName: req.readerName,
+      readerId: req.readerId,
+      category: req.params.category
+    });
+
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 
@@ -267,8 +306,6 @@ router.get('/history', authMiddleware, async (req, res) => {
     .exec()
     console.log(event_list.map((event) => event.post_id))
 
-    // id_list = ["65b33a9d15bfee61b47aed77", "65b33a9f15bfee61b47aed7d"]
-
     const data = await Post.find()
     .where("_id").in(event_list.map((event) => event.post_id))
     .sort("-created_at")
@@ -277,7 +314,7 @@ router.get('/history', authMiddleware, async (req, res) => {
     res.render('history', { 
       locals,
       data,
-      currentRoute: '/',
+      currentRoute: '/history',
       readerName: req.readerName,
       readerId: req.readerId,
       categories: [

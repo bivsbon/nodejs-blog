@@ -1,0 +1,21 @@
+<div class="author">
+    <% if (typeof readerName !== 'undefined') { %>
+        <h1 class="author__heading">History</h1>
+    <% } else { %>
+        <h1 class="author__heading">You are not logged in.</h1>
+        <a href="/login"><button>Log In</button></a>
+    <% } %>
+</div>
+  
+<% if (typeof readerName !== 'undefined') { %>
+<section class="articles">
+    <ul class="article-ul">
+        <li><a href="/category/business"><span>Business</span></a></li>
+        <li><a href="/category/technology"><span>Technology</span></a></li>
+        <li><a href="/category/art"><span>Art</span></a></li>
+        <li><a href="/category/general"><span>General</span></a></li>
+        <li><a href="/category/health"><span>Health</span></a></li>
+        <li><a href="/category/lifestyle"><span>Lifestyle</span></a></li>
+    </ul>
+</section>
+<% } %>

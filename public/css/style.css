@@ -314,14 +314,6 @@ img {
   border: 0;
 }
 
-#searchClose {
-  position: absolute;
-  top: 0;
-  right: 0;
-  color: var(--gray-light);
-  padding: 15px;
-}
-
 
 .pagination {
   font-size: 1.3rem;

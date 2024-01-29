@@ -134,13 +134,13 @@ router.get('/add-post', authMiddleware, async (req, res) => {
 router.post('/add-post', async (req, res) => {
   try {
     try {
-      date = Date.now() - Math.floor(Math.random() * 60*24*60*60*1000)
+      timestamp = Math.floor(Date.now()/1000 - Math.random() * 60*24*60*60)
       const newPost = new Post({
         title: req.body.title,
         category: req.body.category,
         body: req.body.body,
-        created_at: date,
-        updated_at: date
+        created_at: timestamp,
+        updated_at: timestamp
       });
 
       await Post.create(newPost);
@@ -179,6 +179,34 @@ router.get('/edit-post/:id', authMiddleware, async (req, res) => {
     console.log(error);
   }
 
+});
+
+
+/**
+ * GET /
+ * Admin - Create New Post
+*/
+router.get('/edit-timestamp', async (req, res) => {
+  try {
+
+    const locals = {
+      title: "Edit Post",
+      description: "Free NodeJs Admin Management System",
+    };
+
+    const data = await Post.find({})
+
+    data.forEach( async (post) => {
+      console.log(post._id)
+      await Post.updateOne({_id: post._id}, [
+        {$set: {"created_at": Math.round(post["created_at"].getTime()*1000), 
+        "updated_at": Math.round(post["updated_at"].getTime()*1000)}}
+      ])
+    })
+    console.log("Done!")
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 
